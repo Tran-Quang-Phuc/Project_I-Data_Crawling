@@ -15,7 +15,7 @@ NEWSPIDER_MODULE = 'ENewspaperScraper.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'ENewspaperScraper (+http://www.yourdomain.com)'
+# USER_AGENT = 'ENewspaperScraper (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -67,10 +67,9 @@ ROBOTSTXT_OBEY = True
 ITEM_PIPELINES = {
     'ENewspaperScraper.pipelines.CreateDateToDatetime': 100,
     'ENewspaperScraper.pipelines.ShortFormDateToDatetime': 150,
-    # 'ENewspaperScraper.pipelines.TimeCheckPipeline': 200,
+    'ENewspaperScraper.pipelines.TimeCheckPipeline': 200,
     'ENewspaperScraper.pipelines.ConcatenateMessagePipeline': 300,
-     # 'ENewspaperScraper.pipelines.SimilarMessageCheck': 350,
-    'ENewspaperScraper.pipelines.GetLinksInfoPipeline': 400,
+     # 'ENewspaperScraper.pipelines.SimilarMessageCheck': 400
     'ENewspaperScraper.pipelines.StoreToMongoPipeline': 800,
 }
 

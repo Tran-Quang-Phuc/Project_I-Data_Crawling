@@ -1,5 +1,7 @@
 import scrapy
 
+from ENewspaperScraper.items import newsItem
+
 
 class baochinhphuSpider(scrapy.Spider):
     name = 'baochinhphu'
@@ -34,4 +36,39 @@ class baochinhphuSpider(scrapy.Spider):
             yield response.follow(link, callback=self.parse_article)
 
     def parse_article(self, response):
-        pass
+        news = newsItem()
+
+        news['docID'] = response.url[-22:-4]
+        news['user'] = response.xpath('//p[@style="text-align: right;"]//text()').get()
+        news['userID'] = None
+        news['type'] = response.xpath('//div[@class="detail-breadcrumb"]/ul/li/a/@title').get()
+
+        dateString = response.xpath('//meta[@property="article:published_time"]/@content').get()
+        if dateString:
+            dateString = dateString[:-6] + '.000000' + dateString[-6:]
+            news['createDate'] = dateString
+            news['shortFormDate'] = dateString[:10]
+
+        news['title'] = response.xpath('//h1/text()').get()
+        news['description'] = response.xpath('//meta[@name="description"]/@content').get()
+        news['message'] = response.xpath('//div[@data-role="content"]/p//text()').getall()
+
+        link_selectors = response.xpath('//div[@data-role="content"]/p/a') \
+            + response.xpath('//a[@class="title link-callout"]')
+        news['links_in_article'] = self.getLinksInfo(link_selectors)
+
+        news['picture'] = response.xpath('//div[@data-role="content"]/figure//img[1]/@src').getall()
+
+        yield news
+
+    def getLinksInfo(self, selectors):
+        links_in_article = []
+        link = {}
+
+        for selector in selectors:
+            link['name'] = selector.xpath('./text()').get()
+            link['link'] = selector.xpath('./@href').get()
+            link['description'] = None
+            links_in_article.append(link.copy())
+
+        return links_in_article

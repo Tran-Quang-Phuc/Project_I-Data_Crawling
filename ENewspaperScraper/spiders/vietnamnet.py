@@ -51,20 +51,41 @@ class vietnamnetSpider(scrapy.Spider):
         data = response.xpath('//script[@type="application/ld+json"]/text()').getall()[1]
         data = data.replace('\n', '')
         data_obj = json.loads(data)
-        dateString = data_obj['datePublished'][:-7] + '000'
-        news['createDate'] = dateString
-        news['shortFormDate'] = dateString[:10]
+        if data_obj['datePublished']:
+            dateString = data_obj['datePublished'][:-7] + data_obj['datePublished'][-6:]
+            news['createDate'] = dateString
+            news['shortFormDate'] = dateString[:10]
 
         news['title'] = response.xpath('//div[@class="newsFeature__header"]/h1/text()').get()
         news['message'] = response.xpath('//div[contains(@class, "maincontent")]//p//text()').getall()
 
-        news['links_in_article'] = response.xpath('//div[contains(@class, "maincontent")]//p/a') \
+        link_selectors = response.xpath('//div[contains(@class, "maincontent")]//p/a') \
             + response.xpath('//div[@class="related-news mb-25"]/ul/li/p/a') \
             + response.xpath('//div[@class="insert-wiki-content"]')
+        news['links_in_article'] = self.getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[contains(@class, "maincontent")]//figure/img/@src').getall()
-        news['numLikes'] = 100
-        news['numComments'] = 100
-        news['numShares'] = 10
 
         yield news
+
+    def getLinksInfo(self, link_selectors):
+        links_in_article = []
+        link = {}
+        for link_selector in link_selectors:
+            # link_selector = Selector(text=link_selector)
+            if link_selector.xpath('./@href').get():
+                if link_selector.xpath('./@title').get():
+                    link['name'] = link_selector.xpath('./@title').get()
+                else:
+                    link['name'] = link_selector.xpath('.//text()').get()
+                link['link'] = link_selector.xpath('./@href').get()
+                link['description'] = None
+                links_in_article.append(link.copy())
+            else:
+                link['name'] = link_selector.xpath('./h3/a/text()').get()
+                link['link'] = link_selector.xpath('./h3/a/@href').get()
+                link['description'] = link_selector.xpath('./div[@class="insert-wiki-description"]/text()').get()
+                links_in_article.append(link.copy())
+
+        return links_in_article
+

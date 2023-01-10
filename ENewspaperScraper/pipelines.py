@@ -13,9 +13,12 @@ class CreateDateToDatetime:
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
         dateString = adapter.get('createDate')  # 2023-01-03T15:11:00.000000
-        format = '%Y-%m-%dT%H:%M:%S.%f'
-        Datetime = datetime.strptime(dateString, format)
-        adapter['createDate'] = Datetime
+        if dateString:
+            format = '%Y-%m-%dT%H:%M:%S.%f%z'
+            Datetime = datetime.strptime(dateString, format)
+            adapter['createDate'] = Datetime
+        else:
+            raise DropItem("Can not get the create date")
 
         return item
 
@@ -113,32 +116,6 @@ class SimilarMessageCheck:
         if percentage_of_similarity >= 100:
             return True
         return False
-
-
-class GetLinksInfoPipeline:
-    def process_item(self, item, spider):
-        adapter = ItemAdapter(item)
-
-        links_in_article = []
-        link = {}
-        for link_selector in adapter.get('links_in_article'):
-            # link_selector = Selector(text=link_selector)
-            if link_selector.xpath('./@href').get():
-                if link_selector.xpath('./@title').get():
-                    link['name'] = link_selector.xpath('./@title').get()
-                else:
-                    link['name'] = link_selector.xpath('.//text()').get()
-                link['link'] = link_selector.xpath('./@href').get()
-                link['description'] = None
-                links_in_article.append(link.copy())
-            else:
-                link['name'] = link_selector.xpath('./h3/a/text()').get()
-                link['link'] = link_selector.xpath('./h3/a/@href').get()
-                link['description'] = link_selector.xpath('./div[@class="insert-wiki-description"]/text()').get()
-                links_in_article.append(link.copy())
-
-        adapter['links_in_article'] = links_in_article
-        return item
 
 
 class StoreToMongoPipeline:

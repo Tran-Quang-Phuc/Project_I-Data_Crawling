@@ -1,41 +1,61 @@
 import json
 
 import scrapy
+from scrapy.settings.default_settings import USER_AGENT
 
 from ENewspaperScraper.items import newsItem
 
 
-class article(scrapy.Spider):
+class vnexpressSpider(scrapy.Spider):
     name = 'article'
-    start_urls = ['https://vietnamnet.vn/yeu-cau-xac-minh-tai-san-bi-ke-bien-trong-vu-aic-2097637.html',
-                  'https://vietnamnet.vn/quoc-hoi-phe-chuan-mien-nhiem-va-bo-nhiem-thanh-vien-chinh-phu-2097734.html']
+
+    def start_requests(self):
+        urls = ['https://thoibaotaichinhvietnam.vn/quy-hoach-tong-the-quoc-gia-can-phu-hop-voi-nguon-luc-120016.html']
+        for url in urls:
+            yield scrapy.Request(url=url, callback=self.parse, headers={'User-Agent': USER_AGENT})
 
     def parse(self, response):
         news = newsItem()
 
-        news['docID'] = response.xpath('//div[@articletrackingv3="true"]/@articleid').get()
-
-        user_link = response.xpath('//p[@class="newsFeature__author-info"]/span/a/@href').get()
-        news['userID'] = user_link[-11:-5]
-
-        news['type'] = response.xpath('//div[@class="breadcrumb-box__link "]/p/a[1]/@title').get()
-
-        data = response.xpath('//script[@type="application/ld+json"]/text()').getall()[1]
+        data = response.xpath('//script[@type="application/ld+json"][last()]/text()').get()
         data = data.replace('\n', '')
         data_obj = json.loads(data)
-        news['createDate'] = data_obj['datePublished']
-        news['shortFormDate'] = data_obj['datePublished'][:10]
 
-        news['title'] = response.xpath('//div[@class="newsFeature__header"]/h1/text()').get()
-        news['message'] = response.xpath('//div[contains(@class, "maincontent")]//p//text()').getall()
+        news['docID'] = response.url[-11:-5]
+        news['user'] = data_obj['author']['name'].replace(' Thời báo Tài chính Việt Nam', '')
+        news['userID'] = None
+        news['type'] = response.xpath('//div[@class="catname c-blue"]/a/@title').get()
 
-        news['links_in_article'] = response.xpath('//div[contains(@class, "maincontent")]//p/a') \
-            + response.xpath('//div[@class="related-news mb-25"]/ul/li/p/a') \
-            + response.xpath('//div[@class="insert-wiki-content"]')
+        dateString = data_obj['datePublished']
+        if dateString:
+            news['createDate'] = dateString[:-6] + '.000000' + dateString[-6:]
+            news['shortFormDate'] = dateString[:10]
 
-        news['picture'] = response.xpath('//div[contains(@class, "maincontent")]//figure/img/@src').getall()
-        news['numLikes'] = 100
-        news['numComments'] = 100
-        news['numShares'] = 10
+        news['title'] = data_obj['headline']
+        news['description'] = data_obj['description']
+        news['message'] = response.xpath('//div[@class="post-content __MASTERCMS_CONTENT"]/p//text()').getall()
+
+        link_selectors = []
+        news['links_in_article'] = self.getLinksInfo(link_selectors)
+
+        news['picture'] = response.xpath('//div[@class="post-content __MASTERCMS_CONTENT"]//img/@src').getall()
 
         yield news
+
+    def getLinksInfo(self, selectors):
+        links_in_article = []
+        link = {}
+
+        for selector in selectors:
+            if selector.xpath('./@href'):
+                link['name'] = selector.xpath('./text()').get()
+                link['link'] = selector.xpath('./@href').get()
+                link['description'] = None
+                links_in_article.append(link.copy())
+            else:
+                link['name'] = selector.xpath('.//a[1]/@title').get()
+                link['link'] = selector.xpath('.//a[1]/@href').get()
+                link['description'] = selector.xpath('/p[@class="description"]/text()').get()
+                links_in_article.append(link.copy())
+
+        return links_in_article
