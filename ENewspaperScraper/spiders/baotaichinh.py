@@ -56,7 +56,7 @@ class baotaichinhSpider(scrapy.Spider):
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    def getLinksInfo(self, selectors):  # None
         links_in_article = []
         link = {}
 

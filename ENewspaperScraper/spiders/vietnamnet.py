@@ -48,7 +48,7 @@ class vietnamnetSpider(scrapy.Spider):
 
         news['type'] = response.xpath('//div[@class="breadcrumb-box__link "]/p/a[1]/@title').get()
 
-        data = response.xpath('//script[@type="application/ld+json"]/text()').getall()[1]
+        data = response.xpath('//script[@type="application/ld+json"]/text()').get()
         data = data.replace('\n', '')
         data_obj = json.loads(data)
         if data_obj['datePublished']:
