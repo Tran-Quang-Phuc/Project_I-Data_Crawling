@@ -3,35 +3,44 @@ import scrapy
 from ENewspaperScraper.items import newsItem
 
 
-class candSpider(scrapy.Spider):
+class articleSpider(scrapy.Spider):
     name = 'article'
+    allowed_domains = ['thanhnien.vn']
     start_urls = [
-        'https://nhandan.vn/thu-tuong-pham-minh-chinh-du-le-phat-lenh-lam-hang-dau-xuan-quy-mao-tai-cang-tan-cang-cat-lai-post736479.html'
+        'https://thanhnien.vn/'
     ]
 
     def parse(self, response):
+        article_links = response.xpath('//h3/a/@href').getall()
+        for link in article_links:
+            if link != "javascript:;":
+                yield response.follow(link, callback=self.parse_article)
+
+    def parse_article(self, response):
         news = newsItem()
 
         news['docID'] = response.xpath('//meta[@property="dable:item_id"]/@content').get()
         news['user'] = response.xpath('//meta[@property="dable:author"]/@content').get()
-        news['userID'] = None
-        news['type'] = response.xpath('//meta[@property="article:section"]/@content').get()
+        if news['user']:
+            news['userID'] = response.xpath('//div[@class="author-info"]//a/@href').get()[-10:-4]
+        else:
+            news['user'] = None
+            news['userID'] = None
 
-        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get()[:-6] + '.000' + '+07:00'
+        news['type'] = response.xpath('//div[@class="detail-cate"]/a/@title').get()
+        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get() + '.000' + '+07:00'
         news['createDate'] = dateString
         news['shortFormDate'] = dateString[:10]
-
         news['title'] = response.xpath('//title/text()').get()
         news['description'] = response.xpath('//meta[@name="description"]/@content').get()
-        news['message'] = response.xpath('//div[@class="article__body cms-body"]/p//text()').getall()
+        news['message'] = response.xpath('//div[@data-role="content"]/p//text()').getall()
 
-        link_selectors = response.xpath('//div[@class="related-news"]//article//a')
+        link_selectors = response.xpath('//h2[@class="detail-sapo"]/a') \
+            + response.xpath('//div[@data-role="content"]/p/a') \
+            + response.xpath('//div[@class="detail__related"]//div[@class="box-category-content"]')
         news['links_in_article'] = self.getLinksInfo(link_selectors)
 
-        news['picture'] = response.xpath(
-            '//div[@class="main-col content-col"]/table[@class="picture"]//img/@src').getall() \
-            + response.xpath('//table[@class="picture"]//img/@data-src').getall()
-
+        news['picture'] = response.xpath('//figure//img/@src').getall()
         yield news
 
     def getLinksInfo(self, selectors):
@@ -39,9 +48,15 @@ class candSpider(scrapy.Spider):
         link = {}
 
         for selector in selectors:
-            link['name'] = selector.xpath('./@title').get()
-            link['link'] = selector.xpath('./@href').get()
-            link['description'] = None
-            links_in_article.append(link.copy())
+            if selector.xpath('./@href'):
+                link['name'] = selector.xpath('./@title').get()
+                link['link'] = selector.xpath('./@href').get()
+                link['description'] = None
+                links_in_article.append(link.copy())
+            else:
+                link['name'] = selector.xpath('./h3/a/@title').get()
+                link['link'] = selector.xpath('./h3/a/@href').get()
+                link['description'] = selector.xpath('./p/text()').get()
+                links_in_article.append(link.copy())
 
         return links_in_article

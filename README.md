@@ -50,9 +50,14 @@ Dữ liệu từ các bài báo sẽ được bóc tách và lưu trữ ở dạ
 - numLikes: Số lượng like
 - numComments: Số lượng comments
 - numShares: Số lượt shares
-
 ![img.png](img.png)
-3. Các vấn đề chưa giải quyết được
+
+3. Kiểm tra trùng lặp
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
+
+
+4. Các vấn đề chưa giải quyết được
 - Chưa tích hợp kiểm tra trùng lặp nội dung. Hai bài báo giống nhau vẫn cùng được crrawl về.
 - Chưa lấy được số lượng Like, Commnet, Share 
 - Chưa lập lịch được cho các spider tự động crawl hằng ngày

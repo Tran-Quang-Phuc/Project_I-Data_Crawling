@@ -8,6 +8,8 @@ from itemadapter import ItemAdapter
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 
+all_messages = []
+
 
 class CreateDateToDatetime:
     def process_item(self, item, spider):
@@ -59,7 +61,6 @@ class ConcatenateMessagePipeline:
 
 class SimilarMessageCheck:
     def __init__(self):
-        self.news_message = []
         nltk.download('punkt')
 
     def process_item(self, item, spider):
@@ -68,14 +69,14 @@ class SimilarMessageCheck:
 
         if len(cur_message) < 20:
             raise DropItem("Message is too short!")
-        elif len(self.news_message) != 0:
-            for message in self.news_message:
+        elif len(all_messages) != 0:
+            for message in all_messages:
                 if self.checkSimilar(cur_message, message):
                     raise DropItem("Drop similar news!")
                 else:
-                    self.news_message.append(cur_message)
+                    all_messages.append(cur_message)
         else:
-            self.news_message.append(cur_message)
+            all_messages.append(cur_message)
 
         print("Add a new article")
 
@@ -85,24 +86,18 @@ class SimilarMessageCheck:
         mess1_docs = []
         for line in sent_tokenize(mess1):
             mess1_docs.append(line)
-
         gen_docs = []
         for line in mess1_docs:
             gen_doc = [word.lower() for word in word_tokenize(line)]
             gen_docs.append(gen_doc)
-
         dictionary = gensim.corpora.Dictionary(gen_docs)
         corpus = [dictionary.doc2bow(gen_doc) for gen_doc in gen_docs]
         tf_idf = gensim.models.TfidfModel(corpus)
-
         sims = gensim.similarities.Similarity('workdir/', tf_idf[corpus], num_features=len(dictionary))
-
         mess2_docs = []
         avg_sims = []
-
         for line in sent_tokenize(mess2):
             mess2_docs.append(line)
-
         for line in mess2_docs:
             query_doc = [w.lower() for w in word_tokenize(line)]
             query_doc_bow = dictionary.doc2bow(query_doc)  # update an existing dictionary and create bag of words

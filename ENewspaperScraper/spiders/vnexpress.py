@@ -1,5 +1,4 @@
 import scrapy
-from scrapy.crawler import CrawlerProcess
 
 from ENewspaperScraper.items import newsItem
 
@@ -75,9 +74,3 @@ class vnexpressSpider(scrapy.Spider):
                 links_in_article.append(link.copy())
 
         return links_in_article
-
-
-if __name__ == "__main__":
-    news_crawler = CrawlerProcess()
-    news_crawler.crawl(vnexpressSpider)
-    news_crawler.start()

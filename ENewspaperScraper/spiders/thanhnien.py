@@ -1,34 +1,83 @@
 import scrapy
 
+from ENewspaperScraper.items import newsItem
+
 
 class thanhnienSpider(scrapy.Spider):
-    name = 'baothanhnien'
+    name = 'thanhnien'
     allowed_domains = ['thanhnien.vn']
     start_urls = ['https://thanhnien.vn/']
 
     def parse(self, response):
-        article_links = response.xpath('//article//a[1]/@href').getall()
-        for link in article_links:
-            response.follow(link, callback=self.parse_article)
-
-        topic_links = response.xpath('//ul[@class="site-header__menu"]/li/a/@href').getall()
+        topic_links = response.xpath('//ul[@class="menu-nav"]/li/a/@href').getall()
         for link in topic_links:
-            response.follow(link, callback=self.parse_topic)
+            yield response.follow(link, callback=self.parse_topic)
+
+        article_links = response.xpath('//h3/a/@href').getall()
+        for link in article_links:
+            if link != "javascript:;":
+                yield response.follow(link, callback=self.parse_article)
 
     def parse_topic(self, response):
-        article_links = response.xpath('//article//a[1]/@href').getall()
-        for link in article_links:
-            response.follow(link, callback=self.parse_article)
-
-        cate_links = response.xpath('//ol[@class="breadcrumb"]/li/a/@href').getall()
+        cate_links = response.xpath('//div[@class="swiper-wrapper"]/a/@href').getall()
         for link in cate_links:
-            response.follow(link, callback=self.parse_category)
+            yield response.follow(link, callback=self.parse_category)
+
+        article_links = response.xpath('//h3/a/@href').getall() + response.xpath('//h2/a/@href').getall()
+        for link in article_links:
+            if link != "javascript:;":
+                yield response.follow(link, callback=self.parse_article)
 
     def parse_category(self, response):
-        article_links = response.xpath('//article//a[1]/@href').getall()
+        article_links = response.xpath('//h3/a/@href').getall() + response.xpath('//h2/a/@href').getall()
         for link in article_links:
-            response.follow(link, callback=self.parse_article)
+            if link != "javascript:;":
+                yield response.follow(link, callback=self.parse_article)
 
     def parse_article(self, response):
-        pass
+        news = newsItem()
+
+        news['docID'] = response.xpath('//meta[@property="dable:item_id"]/@content').get()
+        news['user'] = response.xpath('//meta[@property="dable:author"]/@content').get()
+        if news['user']:
+            news['userID'] = response.xpath('//div[@class="author-info"]//a/@href').get()[-10:-4]
+        else:
+            news['user'] = None
+            news['userID'] = None
+
+        news['type'] = response.xpath('//div[@class="detail-cate"]/a/@title').get()
+        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get() + '.000' + '+07:00'
+        if dateString:
+            news['createDate'] = dateString
+            news['shortFormDate'] = dateString[:10]
+        news['title'] = response.xpath('//title/text()').get()
+        news['description'] = response.xpath('//meta[@name="description"]/@content').get()
+        news['message'] = response.xpath('//div[@data-role="content"]/p//text()').getall()
+
+        link_selectors = response.xpath('//h2[@class="detail-sapo"]/a') \
+            + response.xpath('//div[@data-role="content"]/p/a') \
+            + response.xpath('//div[@class="detail__related"]//div[@class="box-category-content"]')
+        news['links_in_article'] = self.getLinksInfo(link_selectors)
+
+        news['picture'] = response.xpath('//figure//img/@src').getall()
+
+        yield news
+
+    def getLinksInfo(self, selectors):
+        links_in_article = []
+        link = {}
+
+        for selector in selectors:
+            if selector.xpath('./@href'):
+                link['name'] = selector.xpath('./@title').get()
+                link['link'] = selector.xpath('./@href').get()
+                link['description'] = None
+                links_in_article.append(link.copy())
+            else:
+                link['name'] = selector.xpath('./h3/a/@title').get()
+                link['link'] = selector.xpath('./h3/a/@href').get()
+                link['description'] = selector.xpath('./p/text()').get()
+                links_in_article.append(link.copy())
+
+        return links_in_article
     

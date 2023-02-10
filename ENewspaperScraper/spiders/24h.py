@@ -39,12 +39,4 @@ class TfhSpider(scrapy.Spider):
             yield response.follow(link.get(), callback=self.parse_article)
 
     def parse_article(self, response):
-        yield {
-            'id': 12
-        }
-
-
-if __name__ == "__main__":
-    news_scraper = CrawlerProcess()
-    news_scraper.crawl(TfhSpider)
-    news_scraper.start()
+        pass
