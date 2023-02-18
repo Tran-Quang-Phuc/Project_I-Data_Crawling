@@ -1,8 +1,10 @@
 import scrapy
 
+from ENewspaperScraper.items import newsItem
+
 
 class vtvSpider(scrapy.Spider):
-    name = 'vtv.vn'
+    name = 'vtv'
     allowed_domains = ['vtv.vn']
     start_urls = ['https://vtv.vn/']
 
@@ -10,11 +12,11 @@ class vtvSpider(scrapy.Spider):
         article_links = response.xpath('//h2/a/@href').getall() \
                         + response.xpath('//h3/a/@href').getall()
         for link in article_links:
-            response.follow(link, callback=self.parse_article)
+            yield response.follow(link, callback=self.parse_article)
 
         topic_links = response.xpath('//div[@class="menu_chinh"]/ul/li/a/@href').getall()
         for link in topic_links:
-            response.follow(link, callback=self.parse_topic)
+            yield response.follow(link, callback=self.parse_topic)
 
     def parse_topic(self, response):
         article_links = response.xpath('//li[@class="tlitem "]/h4/a/@href').getall() \
@@ -23,11 +25,11 @@ class vtvSpider(scrapy.Spider):
                         + response.xpath('//h2/a/@href').getall() \
                         + response.xpath('//h3/a/@href').getall()
         for link in article_links:
-            response.follow(link, callback=self.parse_article)
+            yield response.follow(link, callback=self.parse_article)
 
         cate_links = response.xpath('//div[@class="left fl"]/ul/li/a/@href').getall()
         for link in cate_links:
-            response.follow(link, callback=self.parse_category)
+            yield response.follow(link, callback=self.parse_category)
 
     def parse_category(self, response):
         article_links = response.xpath('//li[@class="tlitem "]/h4/a/@href').getall() \
@@ -36,8 +38,38 @@ class vtvSpider(scrapy.Spider):
                         + response.xpath('//h2/a/@href').getall() \
                         + response.xpath('//h3/a/@href').getall()
         for link in article_links:
-            response.follow(link, callback=self.parse_article)
+            yield response.follow(link, callback=self.parse_article)
 
     def parse_article(self, response):
-        pass
-    
+        news = newsItem()
+        news['docID'] = response.url[-19:-4]
+        news['user'] = None
+        news['userID'] = None
+        news['type'] = response.xpath('//meta[@property="article:section"]/@content').get()
+        dateString = response.xpath("//meta[@name='pubdate']/@content").get()[:-6] + '.000' + '+07:00'
+        if dateString:
+            news['createDate'] = dateString
+            news['shortFormDate'] = dateString[:10]
+        news['title'] = response.xpath('//meta[@property="og:title"]/@content').get()
+        news['description'] = response.xpath('//meta[@property="og:description"]/@content').get()
+        news['message'] = response.xpath('//div[@data-field="body"]/p//text()').getall()
+
+        link_selectors = response.xpath('//div[@class="tinlienquan clearfix"]/ul/li/a') \
+            + response.xpath('//div[@data-field="body"]/p/a')
+        news['links_in_article'] = self.getLinksInfo(link_selectors)
+
+        news['picture'] = response.xpath('//div[@data-field="body"]/div[@type="Photo"]//img/@src').getall()
+
+        yield news
+
+    def getLinksInfo(self, selectors):
+        links_in_article = []
+        link = {}
+
+        for selector in selectors:
+            link['name'] = selector.xpath('./text()').get()
+            link['link'] = selector.xpath('./@href').get()
+            link['description'] = None
+            links_in_article.append(link.copy())
+
+        return links_in_article
