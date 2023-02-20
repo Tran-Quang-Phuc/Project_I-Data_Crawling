@@ -45,7 +45,7 @@ class candSpider(scrapy.Spider):
         data = data.replace('\n', '')
         data_obj = json.loads(data)
         if data_obj['datePublished']:
-            dateString = self.reformatDateString(data_obj['datePublished'])
+            dateString = self._reformatDateString(data_obj['datePublished'])
             news['createDate'] = dateString
             news['shortFormDate'] = dateString.split("T")[0]
 
@@ -55,29 +55,37 @@ class candSpider(scrapy.Spider):
 
         link_selectors = response.xpath('//div[@class="contref simplebox thumbnail"]/ul/li/a') \
             + response.xpath('//div[@class="contref simplebox vertical"]/ul/li/a')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@class="detail-content-body"]/figure/img/@src').getall()
 
         yield news
 
-    def reformatDateString(self, dateString):
+    @staticmethod
+    def _reformatDateString(dateString):
         # 1/12/2023 7:56:00 AM
         date_component = dateString.split('/')
         month = date_component[0]
+        if len(month) == 1:
+            month = '0' + month
         day = date_component[1]
+        if len(day) == 1:
+            day = '0' + day
         date_component = date_component[2].split(' ')
         year = date_component[0]
         time = date_component[1]
         if date_component[2] == 'PM':
             time = time.split(':', 1)
             hour = str(int(time[0]) + 12)
+            if hour == '24':
+                hour = '12'
             time = hour + ':' + time[1]
 
-        dateString = year + '-' + month + '-' + day + 'T' + time + '.000000' + '+07:00'
+        dateString = year + '-' + month + '-' + day + 'T' + time + '.000' + '+07:00'
         return dateString
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
