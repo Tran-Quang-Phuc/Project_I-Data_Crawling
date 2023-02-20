@@ -6,7 +6,7 @@ from ENewspaperScraper.items import newsItem
 
 
 class baotaichinhSpider(scrapy.Spider):
-    name = 'thoibaotaichinhvietnam'
+    name = 'thoibaotaichinh'
     allowed_domains = ['thoibaotaichinhvietnam.vn']
     start_urls = ['https://thoibaotaichinhvietnam.vn/']
 
@@ -50,13 +50,14 @@ class baotaichinhSpider(scrapy.Spider):
         news['message'] = response.xpath('//div[@class="post-content __MASTERCMS_CONTENT"]/p//text()').getall()
 
         link_selectors = []
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@class="post-content __MASTERCMS_CONTENT"]//img/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):  # None
+    @staticmethod
+    def _getLinksInfo(selectors):  # None
         links_in_article = []
         link = {}
 
