@@ -43,16 +43,18 @@ class nhandanSpider(scrapy.Spider):
         news['userID'] = None
         news['type'] = response.xpath('//meta[@property="article:section"]/@content').get()
 
-        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get()[:-6] + '.000' + '+07:00'
-        news['createDate'] = dateString
-        news['shortFormDate'] = dateString[:10]
+        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get()
+        if dateString:
+            dateString = dateString[:-6] + '.000' + '+07:00'
+            news['createDate'] = dateString
+            news['shortFormDate'] = dateString[:10]
 
         news['title'] = response.xpath('//title/text()').get()
         news['description'] = response.xpath('//meta[@name="description"]/@content').get()
         news['message'] = response.xpath('//div[@class="article__body cms-body"]/p//text()').getall()
 
         link_selectors = response.xpath('//div[@class="related-news"]//article//a')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath(
             '//div[@class="main-col content-col"]/table[@class="picture"]//img/@src').getall() \
@@ -60,7 +62,8 @@ class nhandanSpider(scrapy.Spider):
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
