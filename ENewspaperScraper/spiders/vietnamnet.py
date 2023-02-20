@@ -40,35 +40,45 @@ class vietnamnetSpider(scrapy.Spider):
     def parse_article(self, response):
         news = newsItem()
 
+        data = response.xpath('//script[@type="application/ld+json"]/text()').getall()[1]
+        data = data.replace('\n', '')
+        data_obj = json.loads(data)
+
         news['docID'] = response.xpath('//div[@articletrackingv3="true"]/@articleid').get()
 
+        user = data_obj['author']['name']
+        if len(user):
+            news['user'] = user[0]
+        else:
+            news['user'] = None
         user_link = response.xpath('//p[@class="newsFeature__author-info"]/span/a/@href').get()
         if user_link:
             news['userID'] = user_link[-11:-5]
+        else:
+            news['userID'] = None
 
         news['type'] = response.xpath('//div[@class="breadcrumb-box__link "]/p/a[1]/@title').get()
 
-        data = response.xpath('//script[@type="application/ld+json"]/text()').get()
-        data = data.replace('\n', '')
-        data_obj = json.loads(data)
         if data_obj['datePublished']:
-            dateString = data_obj['datePublished'][:-7] + data_obj['datePublished'][-6:]
+            dateString = data_obj['datePublished'].replace(' ', '')
             news['createDate'] = dateString
             news['shortFormDate'] = dateString[:10]
 
-        news['title'] = response.xpath('//div[@class="newsFeature__header"]/h1/text()').get()
+        news['title'] = response.xpath('//title/text()').get()
+        news['description'] = response.xpath('//meta[@name="description"]/@content').get()
         news['message'] = response.xpath('//div[contains(@class, "maincontent")]//p//text()').getall()
 
         link_selectors = response.xpath('//div[contains(@class, "maincontent")]//p/a') \
             + response.xpath('//div[@class="related-news mb-25"]/ul/li/p/a') \
             + response.xpath('//div[@class="insert-wiki-content"]')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[contains(@class, "maincontent")]//figure/img/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, link_selectors):
+    @staticmethod
+    def _getLinksInfo(link_selectors):
         links_in_article = []
         link = {}
         for link_selector in link_selectors:
