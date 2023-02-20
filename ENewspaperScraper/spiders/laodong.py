@@ -58,13 +58,14 @@ class laodongSpider(scrapy.Spider):
         link_selectors = response.xpath('//div[@class="tin-lien-quan"]/div/a') \
             + response.xpath('//div[@class="chappeau"]/p/a') \
             + response.xpath('//div[@class="art-body"]/p/a')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@class="art-body"]/figure/img/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
