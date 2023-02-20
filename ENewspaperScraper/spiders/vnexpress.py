@@ -5,27 +5,28 @@ from ENewspaperScraper.items import newsItem
 
 class vnexpressSpider(scrapy.Spider):
     name = 'vnexpress'
-    # custom_settings = {'CLOSESPIDER_PAGECOUNT': 100}
     allowed_domains = ['vnexpress.net']
     start_urls = ['https://vnexpress.net/']
 
     def parse(self, response):
-        article_links = response.xpath('//article//a[1]/@href').getall()
-        for link in article_links:
-            yield response.follow(link, callback=self.parse_article)
-
         topic_links = response.xpath('//nav[@class="main-nav"]/ul[1]/li/a/@href').getall()
         for link in topic_links:
-            yield response.follow(link, callback=self.parse_topic)
+            if link != 'javascript:;':
+                yield response.follow(link, callback=self.parse_topic)
 
-    def parse_topic(self, response):
         article_links = response.xpath('//article//a[1]/@href').getall()
         for link in article_links:
             yield response.follow(link, callback=self.parse_article)
 
+    def parse_topic(self, response):
         category_links = response.xpath('//ul[@class="ul-nav-folder"]/li/a/@href').getall()
         for link in category_links:
-            yield response.follow(link, callback=self.parse_category)
+            if link != 'javascript:;':
+                yield response.follow(link, callback=self.parse_category)
+
+        article_links = response.xpath('//article//a[1]/@href').getall()
+        for link in article_links:
+            yield response.follow(link, callback=self.parse_article)
 
     def parse_category(self, response):
         article_links = response.xpath('//article//a[1]/@href').getall()
@@ -46,18 +47,20 @@ class vnexpressSpider(scrapy.Spider):
             news['createDate'] = dateString
             news['shortFormDate'] = dateString[:10]
 
-        news['title'] = response.xpath('//h1[@class="title-detail"]/text()').get()
+        news['title'] = response.xpath('//meta[@property="og:title"]/@content').get()
+        news['description'] = response.xpath('//meta[@property="og:description"]/@content').get()
         news['message'] = response.xpath('//article[@class="fck_detail "]/p//text()').getall()
 
-        link_selecters = response.xpath('//article[@class="fck_detail "]/p/a') \
+        link_selectors = response.xpath('//article[@class="fck_detail "]/p/a') \
             + response.xpath('//article[@class="item-news"]')  # not in response?
-        news['links_in_article'] = self.getLinksInfo(link_selecters)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//article[@class="fck_detail "]//img/@data-src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
