@@ -40,7 +40,7 @@ class laodongSpider(scrapy.Spider):
         news['docID'] = response.xpath('//div[@ng-controller="ChiTietTinCtrl as vm"]/@articleid').get()
         news['user'] = response.xpath('//span[@class="authors"]/text()').get()
         news['userID'] = None
-        news['type'] = response.xpath('//div[@class="breadcrums"]/h3/a/text()').get()
+        news['type'] = response.xpath('//meta[@property="article:section"]/@content').get()
 
         data = response.xpath('//script[@type="application/ld+json"]/text()').get()
         data = data.replace('\n', '')
@@ -51,20 +51,13 @@ class laodongSpider(scrapy.Spider):
             news['createDate'] = dateString
             news['shortFormDate'] = dateString[:10]
 
-        news['title'] = response.xpath('//h1/text()').get()
-
-        description = ''
-        lines = response.xpath('//div[@class="chappeau"]/p//text()').getall()
-        for line in lines:
-            line = line.replace('\n', '')
-            description += line
-        news['description'] = description
-
+        news['title'] = response.xpath('//meta[@property="og:title"]/@content').get()
+        news['description'] = response.xpath('//meta[@property="og:description"]/@content').get()
         news['message'] = response.xpath('//div[@class="art-body"]/p//text()').getall()
 
         link_selectors = response.xpath('//div[@class="tin-lien-quan"]/div/a') \
-                         + response.xpath('//div[@class="chappeau"]/p/a') \
-                         + response.xpath('//div[@class="art-body"]/p/a')
+            + response.xpath('//div[@class="chappeau"]/p/a') \
+            + response.xpath('//div[@class="art-body"]/p/a')
         news['links_in_article'] = self.getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@class="art-body"]/figure/img/@src').getall()
@@ -76,7 +69,7 @@ class laodongSpider(scrapy.Spider):
         link = {}
 
         for selector in selectors:
-            link['name'] = selector.xpath('./text()').get()
+            link['name'] = selector.xpath('.//text()').get().replace('\r\n', '').strip()
             link['link'] = selector.xpath('./@href').get()
             link['description'] = None
             links_in_article.append(link.copy())
