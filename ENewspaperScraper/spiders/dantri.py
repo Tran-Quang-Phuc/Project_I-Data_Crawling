@@ -11,7 +11,7 @@ class dantriSpider(scrapy.Spider):
     start_urls = ['https://dantri.com.vn/']
 
     def parse(self, response):
-        article_links =  response.xpath('//h3[@class="article-title"]/a/@href').getall()
+        article_links = response.xpath('//h3[@class="article-title"]/a/@href').getall()
         for link in article_links:
             yield response.follow(link, callback=self.parse_article)
 
@@ -38,7 +38,9 @@ class dantriSpider(scrapy.Spider):
 
         news['docID'] = response.xpath('//div[@data-module="article-audio"]/@data-article-id').get()
         news['user'] = response.xpath('//div[@class="author-name"]/a/b/text()').get()
-        news['userID'] = response.xpath('//div[@class="author-name"]/a/@href').get()[-7:-4]
+        user_link = response.xpath('//div[@class="author-name"]/a/@href').get()
+        if user_link:
+            news['userID'] = user_link[-7:-4]
         news['type'] = response.xpath('//ul[@class="breadcrumbs"]/li/a/@title').get()
 
         data = response.xpath('//script[@type="application/ld+json"]/text()').getall()[-2]
@@ -46,23 +48,24 @@ class dantriSpider(scrapy.Spider):
         data_obj = json.loads(data)
         dateString = data_obj['datePublished']
         if dateString:
-            dateString = dateString[:-6] + '.000000' + dateString[-6:]
+            dateString = dateString[:-6] + '.000' + '+07:00'
             news['createDate'] = dateString
             news['shortFormDate'] = dateString[:10]
 
-        news['title'] = response.xpath('//h1/text()').get()
-        news['description'] = response.xpath('//h2[@class="singular-sapo"]/text()').get()
+        news['title'] = response.xpath('//meta[@name="title"]/@content').get()
+        news['description'] = response.xpath('//meta[@name="twitter:description"]/@content').get()
         news['message'] = response.xpath('//div[@class="singular-content"]/p//text()').getall()
 
         link_selectors = response.xpath('//div[@class="singular-content"]/p/a') \
             + response.xpath('//article[@class="article-related"]/article/div[@class="article-content"]')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@class="singular-content"]/figure//img[1]/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
