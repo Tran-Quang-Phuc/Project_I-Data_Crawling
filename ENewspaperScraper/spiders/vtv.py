@@ -46,8 +46,9 @@ class vtvSpider(scrapy.Spider):
         news['user'] = None
         news['userID'] = None
         news['type'] = response.xpath('//meta[@property="article:section"]/@content').get()
-        dateString = response.xpath("//meta[@name='pubdate']/@content").get()[:-6] + '.000' + '+07:00'
+        dateString = response.xpath("//meta[@name='pubdate']/@content").get()
         if dateString:
+            dateString = dateString[:-6] + '.000' + '+07:00'
             news['createDate'] = dateString
             news['shortFormDate'] = dateString[:10]
         news['title'] = response.xpath('//meta[@property="og:title"]/@content').get()
