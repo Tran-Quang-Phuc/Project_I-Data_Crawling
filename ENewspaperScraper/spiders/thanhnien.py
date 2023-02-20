@@ -40,14 +40,19 @@ class thanhnienSpider(scrapy.Spider):
         news['docID'] = response.xpath('//meta[@property="dable:item_id"]/@content').get()
         news['user'] = response.xpath('//meta[@property="dable:author"]/@content').get()
         if news['user']:
-            news['userID'] = response.xpath('//div[@class="author-info"]//a/@href').get()[-10:-4]
+            user_link = response.xpath('//div[@class="author-info"]//a/@href').get()
+            if user_link:
+                news['userID'] = user_link[-10: -4]
+            else:
+                news['userID'] = None
         else:
             news['user'] = None
             news['userID'] = None
 
         news['type'] = response.xpath('//div[@class="detail-cate"]/a/@title').get()
-        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get() + '.000' + '+07:00'
+        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get()
         if dateString:
+            dateString = dateString + '.000' + '+07:00'
             news['createDate'] = dateString
             news['shortFormDate'] = dateString[:10]
         news['title'] = response.xpath('//title/text()').get()
@@ -57,13 +62,14 @@ class thanhnienSpider(scrapy.Spider):
         link_selectors = response.xpath('//h2[@class="detail-sapo"]/a') \
             + response.xpath('//div[@data-role="content"]/p/a') \
             + response.xpath('//div[@class="detail__related"]//div[@class="box-category-content"]')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//figure//img/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
