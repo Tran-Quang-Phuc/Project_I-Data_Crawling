@@ -37,15 +37,19 @@ class nldSpider(scrapy.Spider):
         news = newsItem()
 
         news['docID'] = response.xpath('//meta[@property="dable:item_id"]/@content').get()
-        news['user'] = response.xpath('//meta[@property="dable:author"]/@content').get().split(': ')[-1]
+        user = response.xpath('//meta[@property="dable:author"]/@content').get()
+        if user:
+            news['user'] = user.split(': ')[-1]
         news['userID'] = None
         news['type'] = response.xpath('//meta[@property="article:section"]/@content').get()
 
-        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get()[:-6] + '.000' + '+07:00'
-        news['createDate'] = dateString
-        news['shortFormDate'] = dateString[:10]
+        dateString = response.xpath('//meta[@itemprop="datePublished"]/@content').get()
+        if dateString:
+            dateString = dateString[:-6] + '.000' + '+07:00'
+            news['createDate'] = dateString
+            news['shortFormDate'] = dateString[:10]
 
-        news['title'] = response.xpath('//title/text()').get()[:-21]
+        news['title'] = response.xpath('//meta[@property="og:title"]/@content').get()
         news['description'] = response.xpath('//meta[@name="description"]/@content').get()
         news['message'] = response.xpath('//div[@class="content-news-detail old-news"]/p//text()').getall()
 
