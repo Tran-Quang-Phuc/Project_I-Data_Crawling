@@ -30,7 +30,7 @@ class kiemsatSpider(scrapy.Spider):
         news['docID'] = response.url[-10:-5]
         news['user'] = response.xpath('//div[@class="chuky"]/a/text()').get()
         news['userID'] = None
-        news['type'] = 1
+        news['type'] = response.xpath('//div[@class="tag"]/a[last()]/@title').get()
 
         data = response.xpath('//script[@type="application/ld+json"]/text()').getall()[-2]
         data = data.replace('\n', '')
@@ -41,19 +41,20 @@ class kiemsatSpider(scrapy.Spider):
             news['createDate'] = dateString
             news['shortFormDate'] = dateString[:10]
 
-        news['title'] = response.xpath('//h1/text()').get()
-        news['description'] = response.xpath('//div[@class="mota"]/h2/text()').get()
+        news['title'] = response.xpath('//meta[@property="og:title"]/@content').get()
+        news['description'] = response.xpath('//meta[@property="og:description"]/@content').get()
         news['message'] = response.xpath('//div[@class="noidung"]/p/text()').getall()
 
         link_selectors = response.xpath('//div[@class="lienquan"]/div') \
             + response.xpath('//div[@class="list_other"]//a')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@class="noidung"]//img/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
