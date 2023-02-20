@@ -55,13 +55,14 @@ class baochinhphuSpider(scrapy.Spider):
 
         link_selectors = response.xpath('//div[@data-role="content"]/p/a') \
             + response.xpath('//a[@class="title link-callout"]')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@data-role="content"]/figure//img[1]/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
