@@ -55,13 +55,14 @@ class nldSpider(scrapy.Spider):
 
         link_selectors = response.xpath('//div[@class="content-news-detail old-news"]/p/a') \
             + response.xpath('//div[contains(@class, "news-relation-bottom")]/ul[@class="list-item"]/li/a[1]')
-        news['links_in_article'] = self.getLinksInfo(link_selectors)
+        news['links_in_article'] = self._getLinksInfo(link_selectors)
 
         news['picture'] = response.xpath('//div[@class="content-news-detail old-news"]/div[@type="Photo"]//img/@src').getall()
 
         yield news
 
-    def getLinksInfo(self, selectors):
+    @staticmethod
+    def _getLinksInfo(selectors):
         links_in_article = []
         link = {}
 
