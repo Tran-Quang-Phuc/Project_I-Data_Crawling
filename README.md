@@ -58,8 +58,10 @@ và bóc tách dữ liệu từ các trang Web.
 thu thập dữ liệu theo chiến lược bắt đầu từ trang chủ, sử dụng Xpath để lấy đường
 link của các thư mục con và các bài báo, đi theo các đường link đó để bóc tách và lấy
 về những dữ liệu được chỉ định.
+
 - Mô hình cơ bản của một spider sẽ như sau:
-    ```
+
+    ```python
     class News_spider(scrapy.Spider):
         name = 'spider_name'
         allowed_domains = ['domain_1', 'domain_2', ...]
@@ -83,7 +85,7 @@ không đúng định dạng mong muốn hoặc dư thừa các dữ liệu lặ
 - Vì vậy, các dữ liệu lấy về bởi spiders sẽ được đưa qua pipelines để xử lý và thực hiện
 lưu trữ.
 - Trong dự án này, pipelines sẽ thực hiện các thao tác sau:
-
+    
     |STT|Tên|Chức năng|
     |:---|:---|:---------|
     |1|CreateDateToDatetime|Chuyển đổi ngày xuất bản từ kiểu string sang datetime|
@@ -92,4 +94,14 @@ lưu trữ.
     |4|ConcatenateMessagePipeline|Chuyển nội dung từ list về string|
     |5|SimilarityPipeline|Loại bỏ các bài báo có nội dung trùng lặp|
     |6|StoreToMongoPipeline|Lưu trữ dữ liệu vào MongoDB|
+
+### 3. Các cài đặt bổ sung
+
+## III. Tổng kết
+### 1. Quá trình thực hiện
+
+### 2. Các phần đã làm được
+
+### 3. Các phần chưa làm được
+
    
