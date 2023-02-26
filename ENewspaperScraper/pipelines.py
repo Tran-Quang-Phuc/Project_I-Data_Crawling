@@ -36,7 +36,7 @@ class ShortFormDateToDatetime:
         return item
 
 
-class TimeCheckPipeline:
+class CheckTimePipeline:
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
 
