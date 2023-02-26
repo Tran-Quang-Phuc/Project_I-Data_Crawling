@@ -67,7 +67,7 @@ ROBOTSTXT_OBEY = True
 ITEM_PIPELINES = {
     'ENewspaperScraper.pipelines.CreateDateToDatetime': 100,
     'ENewspaperScraper.pipelines.ShortFormDateToDatetime': 150,
-    'ENewspaperScraper.pipelines.TimeCheckPipeline': 200,
+    'ENewspaperScraper.pipelines.CheckTimePipeline': 200,
     'ENewspaperScraper.pipelines.ConcatenateMessagePipeline': 300,
     'ENewspaperScraper.pipelines.SimilarityPipeline': 400,
     'ENewspaperScraper.pipelines.StoreToMongoPipeline': 800,
