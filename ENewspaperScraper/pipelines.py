@@ -8,9 +8,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-all_messages = []
-
-
 class CreateDateToDatetime:
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
@@ -21,7 +18,6 @@ class CreateDateToDatetime:
             adapter['createDate'] = Datetime
         else:
             raise DropItem("Can not get the create date")
-
         return item
 
 
@@ -32,30 +28,25 @@ class ShortFormDateToDatetime:
         format = '%Y-%m-%d'
         Datetime = datetime.strptime(dateString, format)
         adapter['shortFormDate'] = Datetime
-
         return item
 
 
 class CheckTimePipeline:
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
-
         today = datetime.now()
         if adapter.get('shortFormDate').date() != today.date():
             raise DropItem("This article is not published today")
-
         return item
 
 
 class ConcatenateMessagePipeline:
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
-
         message = ''
         for para in adapter.get('message'):
             message = message + para
         adapter['message'] = message.replace('\n', '').replace('\xa0', '')
-
         return item
 
 
@@ -91,17 +82,17 @@ class SimilarityPipeline:
 
         # If the article is not similar to any of the previously seen articles, add it to the set
         self.articles.add(message)
-
-        # Return the item to continue processing it
         return item
 
 
 class StoreToMongoPipeline:
     def __init__(self):
         self.conn = pymongo.MongoClient('localhost', 27017)
-        db = self.conn['OnlineNews']
-        self.collection = db['Vietnamnet']
+        self.db = self.conn['OnlineNews']
 
     def process_item(self, item, spider):
-        self.collection.insert_one(ItemAdapter(item).asdict())
+        adapter = ItemAdapter(item)
+        collection_name = adapter.get('type').lower()
+        collection = self.db[collection_name]
+        collection.insert_one(ItemAdapter(item).asdict())
         return item
