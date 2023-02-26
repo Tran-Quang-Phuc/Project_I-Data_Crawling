@@ -22,8 +22,14 @@ dung độc hại khác.
 ### 2. Mục tiêu dự án
 
 - Mục tiêu dự án là xây dựng chương trình có khả năng tự động thu thập dữ liệu
-từ các trang báo điện tử lớn ở Việt Nam và thực hiện lưu trữ vào database.
-- Danh sách các tờ báo mà dự án thực hiện thu thập dữ liệu:
+từ các trang báo điện tử lớn ở Việt Nam và thực hiện lưu trữ vào Database.
+- Chương trình cần đáp ứng các chức năng sau:
+  + Lấy về được đầy đủ các dữ liệu được chỉ định
+  + Tự động thu thập dữ liệu hằng ngày
+  + Mỗi lần chạy chỉ lưu trữ các bài báo xuất bản trong ngày
+  + Kiểm tra và loại bỏ các bài báo có nội dung trùng lặp
+  + Lưu trữ dữ liệu vào Database
+- Danh sách các trang báo mà dự án thực hiện thu thập dữ liệu:
   + 24h
   + Báo Chính phủ
   + Thời báo tài chính Việt Nam
@@ -62,6 +68,8 @@ về những dữ liệu được chỉ định.
 - Mô hình cơ bản của một spider sẽ như sau:
 
     ```python
+    import scrapy
+  
     class News_spider(scrapy.Spider):
         name = 'spider_name'
         allowed_domains = ['domain_1', 'domain_2', ...]
@@ -99,9 +107,23 @@ lưu trữ.
 
 ## III. Tổng kết
 ### 1. Quá trình thực hiện
+- Tiến độ thực hiện dự án qua các buổi báo cáo:
+  - Buổi 1: Tìm hiểu về scrapy và Xpath.
+  - Buổi 2: Cài đặt spiders cho 2 trang báo VnExpress và Vietnamnet.
+  - Buổi 3: Không báo cáo
+  - Buổi 4: Cài đặt spiders cho các trang báo: Dân trí, Báo Thanh niên, Báo lao động, v.v...
+    (13 trang báo) và cài đặt pipelines xử lý và lưu trữ dữ liệu (chưa
+    cài đặt được model kiểm tra trùng lặp nội dung).
+  - Buổi 5: Sửa lại một số lỗi trong các spiders, cài đặt thêm cho 3 trang báo:
+    24h, Báo tuổi trẻ, Zingnews.
+  - Buổi 6: Cài đặt model kiểm tra trùng lặp vào pipelines.
 
-### 2. Các phần đã làm được
+### 2. Kết quả đạt được
+- Cơ bản đã thực hiện được hầu hết các chức năng đề ra từ ban đầu
+- Mỗi lần chạy có thể thu thập và lưu trữ được khoảng *** - *** bài báo
+- Các dữ liệu thu thập về tương đối đầy đủ và nhất quán
 
 ### 3. Các phần chưa làm được
+- Chưa lập lịch được cho chương trình chạy hằng ngày
 
    
