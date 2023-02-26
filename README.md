@@ -84,8 +84,12 @@ không đúng định dạng mong muốn hoặc dư thừa các dữ liệu lặ
 lưu trữ.
 - Trong dự án này, pipelines sẽ thực hiện các thao tác sau:
 
-    |Tên|Chức năng|
-    |----|----|
-    |CreateDateToDatetime|Chuyển đổi ngày xuất bản từ kiểu string sang datetime|
-    |ShortFormDateToDatetime|Chuyển đổi ngày xuất bản từ kiểu string sang datetime|
-|   
+    |STT|Tên|Chức năng|
+    |:---|:---|:---------|
+    |1|CreateDateToDatetime|Chuyển đổi ngày xuất bản từ kiểu string sang datetime|
+    |2|ShortFormDateToDatetime|Chuyển đổi ngày xuất bản từ kiểu string sang datetime|
+    |3|CheckTimePipeline|Loại bỏ các bài báo xuất bản không cùng ngày thu thập|
+    |4|ConcatenateMessagePipeline|Chuyển nội dung từ list về string|
+    |5|SimilarityPipeline|Loại bỏ các bài báo có nội dung trùng lặp|
+    |6|StoreToMongoPipeline|Lưu trữ dữ liệu vào MongoDB|
+   
