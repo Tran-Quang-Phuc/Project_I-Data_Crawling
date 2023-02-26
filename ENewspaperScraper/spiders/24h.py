@@ -1,10 +1,10 @@
 import scrapy
-from scrapy.crawler import CrawlerProcess
 
 
 class TfhSpider(scrapy.Spider):
     name = '24h.com'
     allowed_domains = ['24h.com.vn']
+    custom_settings = {'CLOSESPIDER_PAGECOUNT': 100}
     start_urls = ['https://www.24h.com.vn/']
 
     def parse(self, response):
