@@ -81,6 +81,9 @@ ITEM_PIPELINES = {
     'ENewspaperScraper.pipelines.StoreToMongoPipeline': 800,
 }
 
+DOWNLOAD_TIMEOUT = 300  # Set the timeout to 300 seconds
+DOWNLOAD_DELAY = 0.5  # Set the delay between requests to 0.5 seconds
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True
