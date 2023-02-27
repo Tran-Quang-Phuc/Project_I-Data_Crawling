@@ -8,25 +8,26 @@ from ENewspaperScraper.items import newsItem
 class dantriSpider(scrapy.Spider):
     name = 'dantri'
     allowed_domains = ['dantri.com.vn']
+    custom_settings = {'CONCURRENT_REQUESTS': 2}
     start_urls = ['https://dantri.com.vn/']
 
     def parse(self, response):
-        article_links = response.xpath('//h3[@class="article-title"]/a/@href').getall()
-        for link in article_links:
-            yield response.follow(link, callback=self.parse_article)
-
         topic_links = response.xpath('//li[@class="has-child"]/a/@href').getall()
         for link in topic_links:
             yield response.follow(link, callback=self.parse_topic)
 
-    def parse_topic(self, response):
         article_links = response.xpath('//h3[@class="article-title"]/a/@href').getall()
         for link in article_links:
             yield response.follow(link, callback=self.parse_article)
 
+    def parse_topic(self, response):
         cate_links = response.xpath('//ol[@class="menu-second child"]/li/a/@href').getall()
         for link in cate_links:
             yield response.follow(link, callback=self.parse_category)
+
+        article_links = response.xpath('//h3[@class="article-title"]/a/@href').getall()
+        for link in article_links:
+            yield response.follow(link, callback=self.parse_article)
 
     def parse_category(self, response):
         article_links = response.xpath('//h3[@class="article-title"]/a/@href').getall()
@@ -60,7 +61,7 @@ class dantriSpider(scrapy.Spider):
             + response.xpath('//article[@class="article-related"]/article/div[@class="article-content"]')
         news['links_in_article'] = self._getLinksInfo(link_selectors)
 
-        news['picture'] = response.xpath('//div[@class="singular-content"]/figure//img[1]/@src').getall()
+        news['picture'] = response.xpath('//div[@class="singular-content"]/figure//img[1]/@data-src').getall()
 
         yield news
 
