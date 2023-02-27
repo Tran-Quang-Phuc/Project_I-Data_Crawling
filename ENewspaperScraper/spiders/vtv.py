@@ -16,7 +16,8 @@ class vtvSpider(scrapy.Spider):
 
         topic_links = response.xpath('//div[@class="menu_chinh"]/ul/li/a/@href').getall()
         for link in topic_links:
-            yield response.follow(link, callback=self.parse_topic)
+            if link != "javascript:;":
+                yield response.follow(link, callback=self.parse_topic)
 
     def parse_topic(self, response):
         article_links = response.xpath('//li[@class="tlitem "]/h4/a/@href').getall() \
@@ -29,7 +30,8 @@ class vtvSpider(scrapy.Spider):
 
         cate_links = response.xpath('//div[@class="left fl"]/ul/li/a/@href').getall()
         for link in cate_links:
-            yield response.follow(link, callback=self.parse_category)
+            if link != "javascript:;":
+                yield response.follow(link, callback=self.parse_category)
 
     def parse_category(self, response):
         article_links = response.xpath('//li[@class="tlitem "]/h4/a/@href').getall() \
